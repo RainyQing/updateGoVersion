@@ -117,7 +117,7 @@ func main() {
 			log.Printf("解析 `go env` 输出失败: %v\n", err)
 			return
 		}
-		if latestVersion < env.GOVERSION {
+		if latestVersion <= env.GOVERSION {
 			log.Print("本地golang版本: ", env.GOVERSION, " 已经是最新版本, 不需要更新.")
 			return
 		}
