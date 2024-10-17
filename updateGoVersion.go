@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/eiannone/keyboard"
 	"io"
 	"log"
 	"net/http"
@@ -101,11 +102,17 @@ var goProxy = "https://goproxy.cn,direct"
 func main() {
 	// 获取最新版本号, 下载链接 , 文件名
 	latestVersion, url, fileName := getLatestGoVersion()
+	// 初始化键盘输入监听
+	if err := keyboard.Open(); err != nil {
+		log.Fatal(err)
+	}
+	defer keyboard.Close()
 	// 尝试通过 `go env` 命令获取详细环境信息
 	cmd := exec.Command("go", "env")
 	output, err := cmd.CombinedOutput()
 	filePath := ""
 	env := GoEnv{}
+	input := ""
 	if err != nil {
 		log.Println("未检测到 Go 环境 , 最新版本: ", latestVersion)
 	} else {
@@ -119,6 +126,13 @@ func main() {
 		}
 		if latestVersion <= env.GOVERSION {
 			log.Print("本地golang版本: ", env.GOVERSION, " 已经是最新版本, 不需要更新.")
+			// 等待用户输入
+			log.Printf("按任意键退出......")
+			// 等待用户按下任意键
+			_, _, err := keyboard.GetSingleKey()
+			if err != nil {
+				log.Fatal(err)
+			}
 			return
 		}
 		//如果成功解析 `go env` 输出, 则获取 `GOROOT` 路径
@@ -128,7 +142,6 @@ func main() {
 	//下载最新版本
 	downloadFile(url, fileName)
 	//如果未安装go环境让用户输入安装路径
-	input := ""
 	if filePath == "" {
 		//请输入安装文件夹
 		log.Print("请输入安装文件夹, 按回车键使用默认路径: ")
@@ -176,7 +189,11 @@ func main() {
 	printInstallationInfo(latestVersion, filePath, cache)
 	// 等待用户输入
 	log.Printf("按任意键退出......")
-	fmt.Scanln(&input)
+	// 等待用户按下任意键
+	_, _, err = keyboard.GetSingleKey()
+	if err != nil {
+		log.Fatal(err)
+	}
 	//完成安装退出
 	log.Printf("程序已退出.")
 }
