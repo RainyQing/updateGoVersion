@@ -1,6 +1,8 @@
 # updateGoVersion
 ## Golang 安装脚本文档
 
+[![Anurag's github stats](https://github-readme-stats.vercel.app/api?username=a411500412&show_icons=true)](https://github.com/anuraghazra/github-readme-stats)
+
 该 Golang 安装脚本用于自动更新/下载、安装并配置最新版本的 Golang（Go 编程语言），支持 Linux 和 Windows 系统。脚本提供了环境变量设置、Go 模块缓存配置、Go 代理配置等功能。它会检测并仅在有新版本时进行更新安装。
 
 ### 功能特点
