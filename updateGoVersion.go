@@ -107,67 +107,35 @@ func main() {
 		log.Fatal(err)
 	}
 	defer keyboard.Close()
+
+	//申明安装路径变量
+	filePath := ""
+	//申明goenv变量
+	env := GoEnv{}
+	//申明输入路径变量
+	input := ""
+	//申明是否安装go环境变量
+	isInstallGo := false
+	//判断是否安装go环境
 	// 尝试通过 `go env` 命令获取详细环境信息
 	cmd := exec.Command("go", "env")
 	output, err := cmd.CombinedOutput()
-	filePath := ""
-	env := GoEnv{}
-	input := ""
 	if err != nil {
 		log.Println("未检测到 Go 环境 , 最新版本: ", latestVersion)
 	} else {
-		goEnv := strings.TrimSpace(string(output))
-
-		// 解析 `go env` 输出
-		env, err = parseGoEnv(goEnv)
-		if err != nil {
-			log.Printf("解析 `go env` 输出失败: %v\n", err)
+		filePath = checkLocalGoVersion(output, env, err, latestVersion)
+		if "" == filePath {
 			return
 		}
-		if latestVersion <= env.GOVERSION {
-			log.Print("本地golang版本: ", env.GOVERSION, " 已经是最新版本, 不需要更新.")
-			// 等待用户输入
-			log.Printf("按任意键退出......")
-			// 等待用户按下任意键
-			_, _, err := keyboard.GetSingleKey()
-			if err != nil {
-				log.Fatal(err)
-			}
-			return
-		}
-		//如果成功解析 `go env` 输出, 则获取 `GOROOT` 路径
-		filePath = env.GOROOT
-		log.Print("本地golang版本: ", env.GOVERSION, " 最新版本: ", latestVersion)
+		isInstallGo = true
 	}
 	//下载最新版本
 	downloadFile(url, fileName)
 	//如果未安装go环境让用户输入安装路径
 	if filePath == "" {
-		//请输入安装文件夹
-		log.Print("请输入安装文件夹, 按回车键使用默认路径: ")
-		fmt.Scanln(&input)
-		//如果输入路径不为空
-		if input != "" {
-			filePath = input
-			//判断当前环境
-			if runtime.GOOS == windows {
-				//判断输入路径是否符合windows格式
-				isValidWindowsPath(filePath)
-				//判断输入路径是否符合windows格式
-			} else if runtime.GOOS == linux {
-				isValidLinuxPath(filePath)
-			} else {
-				//其他系统暂不支持
-				panic("不支持的操作系统")
-			}
-		} else {
-			//如果输入路径为空, 则默认使用用户主目录
-			homeDir, err := os.UserHomeDir()
-			if err != nil {
-				fmt.Println("获取用户主目录失败:", err)
-				return
-			}
-			filePath = filepath.Join(homeDir, "go")
+		filePath = getInputFilePath(input, filePath)
+		if "" == filePath {
+			return
 		}
 	}
 	log.Printf("安装路径: %s", filePath)
@@ -177,16 +145,19 @@ func main() {
 	if err := os.Remove(fileName); err != nil {
 		log.Printf("删除下载文件 %s 失败: %v", fileName, err)
 	}
-	log.Print("开始自动配置环境变量.")
-
-	//设置环境变量
-	setEnv(filePath)
-	//设置gomod缓存目录
-	cache := setGoModCache(filePath, err)
-	//设置goproxy
-	setGoProxy()
+	//申明gomod缓存目录
+	cache := ""
+	//如果未安装go环境, 则设置环境变量
+	if !isInstallGo {
+		log.Print("开始自动配置环境变量.")
+		setEnv(filePath)
+		//设置gomod缓存目录
+		cache = setGoModCache(filePath, err)
+		//设置goproxy
+		setGoProxy()
+	}
 	//打印安装成功信息
-	printInstallationInfo(latestVersion, filePath, cache)
+	printInstallationInfo(filePath, latestVersion, cache, isInstallGo)
 	// 等待用户输入
 	log.Printf("按任意键退出......")
 	// 等待用户按下任意键
@@ -196,6 +167,61 @@ func main() {
 	}
 	//完成安装退出
 	log.Printf("程序已退出.")
+}
+
+func getInputFilePath(input string, filePath string) string {
+	//请输入安装文件夹
+	log.Print("请输入安装文件夹, 按回车键使用默认路径: ")
+	fmt.Scanln(&input)
+	//如果输入路径不为空
+	if input != "" {
+		filePath = input
+		//判断当前环境
+		if runtime.GOOS == windows {
+			//判断输入路径是否符合windows格式
+			isValidWindowsPath(filePath)
+			//判断输入路径是否符合windows格式
+		} else if runtime.GOOS == linux {
+			isValidLinuxPath(filePath)
+		} else {
+			//其他系统暂不支持
+			panic("不支持的操作系统")
+		}
+	} else {
+		//如果输入路径为空, 则默认使用用户主目录
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Println("获取用户主目录失败:", err)
+			return ""
+		}
+		filePath = filepath.Join(homeDir, "go")
+	}
+	return filePath
+}
+
+func checkLocalGoVersion(output []byte, env GoEnv, err error, latestVersion string) string {
+	goEnv := strings.TrimSpace(string(output))
+
+	// 解析 `go env` 输出
+	env, err = parseGoEnv(goEnv)
+	if err != nil {
+		log.Printf("解析 `go env` 输出失败: %v\n", err)
+		return ""
+	}
+	if latestVersion <= env.GOVERSION {
+		log.Print("本地golang版本: ", env.GOVERSION, " 已经是最新版本, 不需要更新.")
+		// 等待用户输入
+		log.Printf("按任意键退出......")
+		// 等待用户按下任意键
+		_, _, err := keyboard.GetSingleKey()
+		if err != nil {
+			log.Fatal(err)
+		}
+		return ""
+	}
+	//如果成功解析 `go env` 输出, 则获取 `GOROOT` 路径
+	log.Print("本地golang版本: ", env.GOVERSION, " 最新版本: ", latestVersion)
+	return env.GOROOT
 }
 
 func setGoModCache(filePath string, err any) string {
@@ -237,14 +263,17 @@ func setGoProxy() {
 }
 
 // 安装成功后的详细信息
-func printInstallationInfo(goRoot string, goVersion string, gomodcache string) {
+func printInstallationInfo(goRoot string, goVersion string, gomodcache string, isInstallGo bool) {
 	log.Printf("golang环境安装成功！")
 	log.Printf("安装详细信息：")
 	log.Printf("-------------------------")
-	log.Printf("版本: " + goVersion)         // 示例版本
-	log.Printf("安装路径: " + goRoot)          // 示例安装路径
-	log.Printf("gomod缓存目录: " + gomodcache) // gomod缓存目录
-	log.Printf("环境变量: GOROOT 已设置")         // 环境变量设置情况
+	log.Printf("版本: " + goVersion) // 示例版本
+	log.Printf("安装路径: " + goRoot)  // 示例安装路径
+	//如果未安装go环境, 则打印环境变量设置情况
+	if !isInstallGo {
+		log.Printf("gomod缓存目录: " + gomodcache) // gomod缓存目录
+		log.Printf("环境变量: GOROOT 已设置")         // 环境变量设置情况
+	}
 	log.Printf("使用 `go env` 查看详细信息")
 	log.Printf("使用方法: 使用 'go run' 命令运行 Go 程序")
 	log.Printf("-------------------------")
