@@ -30,21 +30,22 @@
    ```
 
 2. 执行安装脚本：
-    - **Linux 系统**：执行 已编译好的`updateGoVersion` 程序或原`updateGoVersion.go` 脚本。
+   - **Linux 系统**：执行 已编译好的`updateGoVersion` 程序或原`updateGoVersion.go` 脚本。
 
-      ```bash
-      updateGoVersion
-      或者
-      go run updateGoVersion.go
-      ```
+     ```bash
+     updateGoVersion
+     或者
+     go run updateGoVersion.go
+     ```
 
-    - **Windows 系统**：执行 已编译好的`updateGoVersion.exe` 程序(需要管理员权限)或原`updateGoVersion.go` 脚本。
+   - **Windows 系统**：执行已编译好的`updateGoVersion.exe` 程序或原`updateGoVersion.go` 脚本(如果本地未安装go环境需要管理员权限设置环境变量)。
 
-      ```powershell
-      .\updateGoVersion.exe
-      或者
-      go run updateGoVersion.go // 注意：需要安装go环境且命令行需要管理员权限
-      ```
+     ```powershell
+     .\updateGoVersion.exe
+     或者
+     go run updateGoVersion.go // 注意：如果本地未安装go环境需要管理员权限设置环境变量
+     ```
+     或者双击打开
 
 3. 脚本将会自动检测现有的 Go 版本，并下载最新版本的 Go 安装包（如果需要更新）。
 
@@ -53,10 +54,9 @@
 
 脚本会自动将 Go 的环境变量配置到系统环境中，包括：
 
-- `GOROOT`：Go 安装路径。
-- `GO111MODULE`：启用 Go modules。
-- `GOMODCACHE`：Go 模块缓存路径。
-- `GOPROXY`：Go 代理设置，默认使用 `https://proxy.golang.org` (七牛云)，可以根据需要修改。
+- `GOROOT`：Go 安装路径(如果是已安装go环境升级不会修改)。
+- `GOMODCACHE`：Go 模块缓存路径(如果是已安装go环境升级不会修改 , 新安装设置陌路在GOROOT路径下gomodcache文件夹)。
+- `GOPROXY`：Go 代理设置，默认使用 `https://proxy.golang.org` (七牛云)，可以根据需要修改(如果是已安装go环境升级不会修改)。
 
 
 ### 常见问题
@@ -78,7 +78,7 @@
 ### 更新日志
 v1.1.0 优化按任意键退出
 
-v1.2.0    1. 优化代码 2. 配置如果班底已经安装go环境则不会设置环境变量和go mod缓存目录以及goproxy
+v1.2.0    1. 优化代码 2. 配置如果本地已经安装go环境则不会设置环境变量和go mod缓存目录以及goproxy
 ### 贡献指南
 
 欢迎通过 GitHub 提交 issues 和 pull requests 来改进此脚本。
