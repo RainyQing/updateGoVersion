@@ -80,8 +80,8 @@
     * 优化按任意键退出
 
 * v1.2.0
-  * 优化代码
-  * 配置如果本地已经安装go环境则不会设置环境变量和go mod缓存目录以及goproxy
+    * 优化代码
+    * 配置如果本地已经安装go环境则不会设置环境变量和go mod缓存目录以及goproxy
 ### 贡献指南
 
 欢迎通过 GitHub 提交 issues 和 pull requests 来改进此脚本。
