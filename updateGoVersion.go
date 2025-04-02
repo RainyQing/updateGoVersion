@@ -85,7 +85,7 @@ type GoEnv struct {
 }
 
 // 下载网站链接
-var downloadURL = "https://studygolang.com/dl/golang/"
+var downloadURL = "https://dl.google.com/go/"
 
 // 获取golang版本信息接口
 var linux = "linux"
